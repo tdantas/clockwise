@@ -1,0 +1,92 @@
+html
+  head
+    title yld clock
+    link(rel='shortcut icon', type='image/png', href='/favicon.png')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    link(rel='stylesheet', type='text/css', href='/assets/stylesheets/app.css')
+
+  body(ng-app='ClockApp')
+    .page(ng-controller='TeamTimezoneCtrl')
+      .timezone(ng-repeat='timezone in timezones' style="clear: both; margin-top 10px; padding-top: 10px;")
+        p {{ timezone.name }} #[span(clock='{{timezone.name}}')]
+        .team(ng-repeat='person in timezone.team')
+          img.circular(ng-src='{{person.avatar}}', style="float: left; margin-right: 5px; margin-bottom: 5px;")
+
+    each sc in scripts
+      script(src=sc)
+
+    script.
+      var clock = angular.module('ClockApp', []);
+
+      clock.directive('clock', function($timeout) {
+        return function(scope, element, attrs) {
+          var timezone = attrs.clock;
+          var timeout;
+
+          updateTime();
+
+          function updateTime() {
+            var now = moment().tz(timezone).format('DD/MM/YYYY - HH:mm:ss');
+            element.text(now);
+            timeout = $timeout(function() { updateTime(); }, 1000);
+          }
+
+          element.on('$destroy', function() { $timeout.cancel(timeout); });
+        }
+      });
+
+      clock.service('TimezoneService', function($q) {
+          return { team: team };
+
+          function team() {
+            var deferred = $q.defer();
+            deferred.resolve([{
+              name: 'Europe/London',
+              team: [
+                { name: 'Nuno Job', avatar: 'http://www.yld.io/images/team/nuno+job@2x.png' },
+                { name: 'Luke Bond', avatar: 'http://www.yld.io/images/team/luke+bond@2x.png' },
+                { name: 'Tom Gallacher', avatar: 'http://www.yld.io/images/team/tom+gallacher@2x.png' },
+                { name: 'Hassy', avatar: 'http://www.yld.io/images/team/hassy+veldstra@2x.png' },
+                { name: 'Milo', avatar: 'http://www.yld.io/images/team/milo+mordaunt@2x.png' },
+                { name: 'Pieter', avatar: 'http://www.yld.io/images/team/pieter+raubenheimer@2x.png' },
+                { name: 'Charlotte', avatar: 'http://www.yld.io/images/team/charlotte+poynton@2x.png' },
+                { name: 'Ian', avatar: 'http://www.yld.io/images/team/ian+crowther@2x.png' } ]
+            },
+            { name: 'Europe/Lisbon',
+              team: [
+                { name: 'Igor Soarez', avatar: 'http://www.yld.io/images/team/igor+soarez@2x.png'},
+                { name: 'Joaquim', avatar: 'http://www.yld.io/images/team/joaquim+serafim@2x.png'},
+                { name: 'Fabio', avatar: 'http://www.yld.io/images/team/fabio+oliveira@2x.png'},
+                { name: 'Joao', avatar: 'http://www.yld.io/images/team/joao+almeida@2x.png'},
+                { name: 'Ping', avatar: 'http://www.yld.io/images/team/miguel+ping@2x.png'},
+                { name: 'Daniela', avatar: 'http://www.yld.io/images/team/daniela+borges@2x.png' },
+                { name: 'Sergio', avatar: 'http://www.yld.io/images/team/sergio+ramos@2x.png'},
+                { name: 'Nelson', avatar: 'http://www.yld.io/images/team/nelson+neves@2x.png' }
+              ]
+            },
+            {
+              name: 'Atlantic/Madeira',
+              team: [ { name: 'Pedro Teixeira', avatar: 'http://www.yld.io/images/team/pedro+teixeira@2x.png' }]
+            },
+            {
+              name: 'America/Recife',
+              team: [ { name: 'Thiago Dantas', avatar: 'http://www.yld.io/images/team/thiago+dantas@2x.png' }]
+            },
+            {
+              name: 'Europe/Stockholm',
+              team: [ { name: 'Mara', avatar: 'http://www.yld.io/images/team/mara+silva@2x.png' }]
+            }]);
+
+            return deferred.promise;
+          }
+      });
+
+      clock.controller('TeamTimezoneCtrl', function($scope, TimezoneService) {
+        TimezoneService
+          .team()
+          .then(success, console.log.bind(console));
+
+        function success(timezones) {
+          $scope.timezones = timezones;
+        }
+      });
